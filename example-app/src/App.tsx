@@ -19,13 +19,14 @@ import {
 import { clusterApiUrl, Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const TARGET_NFT = "Smug Monkey's #171"
+const TARGET_NFT = "Smug Monkey's #170"
 
 const WalletContext: FC<{ children: ReactNode }> = ({ children }) => {
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
@@ -70,7 +71,8 @@ const WalletContent: FC = () => {
   useEffect(() => {
     console.log("chjecking: " + authenticated)
     if (authenticated == 1) {
-      window.location.href = "/home"
+      const auth_token = "token"
+      window.localStorage.setItem("auth_token", JSON.stringify(auth_token));
       console.log("success")
     }
   }, [authenticated]);
@@ -175,50 +177,58 @@ const WalletContent: FC = () => {
     )
   }
 
-  return (
-    <div className={"section"} style={{ background: "#2A2D34", height: "100vh", width: "100vw" }}>
-      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-        <WalletMultiButton />
-        <div style={{ fontSize: "18px", color: "white", display: "flex", flexDirection: "row", margin: "auto" }}>
-          <div className={"mx-2"}>
-            Discord
+  if(authenticated == 1) {
+    return <Navigate to={'/home'} replace/>
+  }
+  else {
+    return (
+        <div className={"section"} style={{ background: "#2A2D34", height: "100vh", width: "100vw" }}>
+          <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+            <WalletMultiButton />
+            <div style={{ fontSize: "18px", color: "white", display: "flex", flexDirection: "row", margin: "auto" }}>
+              <div className={"mx-2"}>
+                Discord
+              </div>
+              <div className={"mx-2"}>
+                Twitter
+              </div>
+            </div>
+            <WalletDisconnectButton />
           </div>
-          <div className={"mx-2"}>
-            Twitter
+          <div className={"mt-5"} style={{ textAlign: "center", justifyContent: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div className={"my-5 title is-1"} style={{ color: "#6c25be" }}>
+              SMUG MONKEE DAO
+            </div>
+            <div className={"mt-5 subtitle"} style={{ color: "white" }}>
+              Please connect your wallet and authenticate.
+            </div>
+            <div className={"mb-5 subtitle"} style={{ color: "white" }}>
+              Only "Smug Monkey's #170" holders allowed.
+            </div>
+            {renderLanding()}
+          </div>
+          <div className={"modal" + (authenticated == 2 ? " is-active" : "")}>
+            <div className="modal-background"/>
+            <div className="modal-content" style={{background: "white", padding: 10, borderRadius: 5}}>
+              u aint got the monkee bruv
+            </div>
+            <button onClick={() => setAuthenticated(0)} className="modal-close is-large" aria-label="close"></button>
           </div>
         </div>
-        <WalletDisconnectButton />
-      </div>
-      <div className={"mt-5"} style={{ textAlign: "center", justifyContent: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div className={"my-5 title is-1"} style={{ color: "#6c25be" }}>
-          SMUG MONKEE DAO
-        </div>
-        <div className={"mt-5 subtitle"} style={{ color: "white" }}>
-          Please connect your wallet and authenticate.
-        </div>
-        <div className={"mb-5 subtitle"} style={{ color: "white" }}>
-          Only "Smug Monkey's #170" holders allowed.
-        </div>
-        {renderLanding()}
-      </div>
-      <div className={"modal" + (authenticated == 2 ? " is-active" : "")}>
-        <div className="modal-background"/>
-        <div className="modal-content" style={{background: "white", padding: 10, borderRadius: 5}}>
-          u aint got the monkee bruv
-        </div>
-        <button onClick={() => setAuthenticated(0)} className="modal-close is-large" aria-label="close"></button>
-      </div>
-    </div>
-  )
+    )
+  }
 }
 
 const App: FC = () => {
+
   return (
     <WalletContext>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<WalletContent />} />
-          <Route path="/home" element={<HomePage />} />
+          <Route path={"/"} element={<WalletContent/>} />
+          <Route path={"/home"} element={<ProtectedRoute/>}>
+            <Route path={"/home"} element={<HomePage/>}/>
+          </Route>
         </Routes>
       </BrowserRouter>
     </WalletContext>
